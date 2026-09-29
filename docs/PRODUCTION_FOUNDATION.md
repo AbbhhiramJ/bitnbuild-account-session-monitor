@@ -6,8 +6,10 @@ This repository now includes an authenticated event API foundation. It is **not 
 
 - Static dashboard: current demo UI and synthetic sample events.
 - `GET /api/health`: reports whether required environment configuration exists; it does not prove database connectivity or provider integration.
-- `GET /api/events`: returns newest stored events, with optional `limit` (1–100) and `before` timestamp.
+- `GET /api/events`: returns newest stored events, with optional `limit` (1–100) and a stable keyset cursor (`before` timestamp plus `beforeId` UUID from `nextCursor`).
 - `POST /api/events`: accepts a normalized event and persists it to PostgreSQL.
+
+For pagination, pass both values returned in `nextCursor` as query parameters on the next request: `?limit=50&before=<timestamp>&beforeId=<uuid>`. The ID tie-breaker prevents records sharing the same timestamp from being skipped.
 - `db/schema.sql`: database migration.
 - `MONITOR_API_KEY`: bearer token required for both event API methods.
 
