@@ -1,0 +1,27 @@
+name: Validate
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  api-syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+      - name: Check API JavaScript syntax
+        run: |
+          node --check api/health.js
+          node --check api/events.js
+      - name: Check required project files
+        run: |
+          test -s db/schema.sql
+          test -s docs/PRODUCTION_FOUNDATION.md
