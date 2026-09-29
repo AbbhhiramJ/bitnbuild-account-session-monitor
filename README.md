@@ -1,27 +1,27 @@
 # Account Takeover & Session Security Monitor
 
-A defensive, demo-first security workspace for reviewing suspicious identity events, session activity, and containment status.
+A defensive security workspace for reviewing account and session events. The current dashboard is a demo UI; a provider-neutral authenticated event API foundation is also included.
 
-## MVP
-- Seeded identity-event timeline with normal and suspicious sessions
-- Explainable risk indicators and evidence attached to each alert
-- Simulated session revocation with explicit simulation labeling
-- Post-containment recheck and incident summary
-
-## Live demo
+## Dashboard demo
 https://bitnbuild-account-session-monitor.vercel.app
 
 ## Demo walkthrough
-1. Review the seeded event timeline and use search or filters to narrow the records.
+1. Review the seeded event timeline and use search or filters.
 2. Open a record to inspect its context and outcome.
-3. Review the guided incident-response steps and mark demo steps as reviewed.
-4. Add local notes and save them in the browser.
-5. Download the incident report.
+3. Work through the guided incident-response checklist.
+4. Add local notes and export the incident report.
 
-## Scope and limitations
-The demo uses synthetic data and browser-local state. It does not connect to an identity provider, revoke real sessions, or verify real account activity. Treat risk indicators as triage clues, not proof of compromise; IP location alone is not proof.
+## API foundation
+- `GET /api/health` — reports required configuration status.
+- `GET /api/events` — authenticated event retrieval.
+- `POST /api/events` — authenticated event ingestion into PostgreSQL.
+- `db/schema.sql` — database schema.
+- `docs/PRODUCTION_FOUNDATION.md` — setup, API contract, and security gaps.
+
+The API requires a PostgreSQL database and server-side `DATABASE_URL` and `MONITOR_API_KEY` environment variables. Apply the SQL schema before use. See the production foundation guide.
+
+## Important limitations
+This is **not yet a production-ready monitoring product**. No identity provider is connected, the dashboard still uses synthetic events and browser-local state, and no real account/session action is performed. The shared API key is a foundation, not multi-user authentication or tenant authorization. Do not ingest real identity data until the remaining security, privacy, and operational controls are implemented and reviewed.
 
 ## Local run
-Open `index.html` in a modern browser. No backend is required.
-
-See [project brief](docs/PROJECT_BRIEF.md).
+Open `index.html` for the static demo. API routes require Vercel Functions or a compatible Node runtime, PostgreSQL, and environment configuration.
