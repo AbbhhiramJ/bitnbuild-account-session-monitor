@@ -1,0 +1,12 @@
+{
+  "name": "account-session-monitor",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Defensive account and session security monitor",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "pg": "^8.16.3"
+  }
+}
