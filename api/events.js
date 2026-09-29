@@ -67,11 +67,38 @@ export default async function handler(req, res) {
 
     const limit = Math.min(100, Math.max(1, Number.parseInt(req.query.limit || "50", 10) || 50));
     const before = req.query.before ? new Date(req.query.before) : null;
+    const beforeId = typeof req.query.beforeId === "string" ? req.query.beforeId : "";
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(beforeId);
     if (before && Number.isNaN(before.getTime())) return res.status(400).json({ error: "Invalid before timestamp" });
-    const result = before
-      ? await pool.query("SELECT id, occurred_at, source, actor, event_type, ip_address, severity, risk_score, summary, details FROM security_events WHERE occurred_at < $1 ORDER BY occurred_at DESC LIMIT $2", [before.toISOString(), limit])
-      : await pool.query("SELECT id, occurred_at, source, actor, event_type, ip_address, severity, risk_score, summary, details FROM security_events ORDER BY occurred_at DESC LIMIT $1", [limit]);
-    return res.status(200).json({ events: result.rows, count: result.rowCount, limit });
+    if (beforeId && (!before || !isUuid)) return res.status(400).json({ error: "beforeId requires a valid before timestamp and UUID" });
+
+    const columns = "id, occurred_at, source, actor, event_type, ip_address, severity, risk_score, summary, details";
+    let result;
+    if (before && beforeId) {
+      result = await pool.query(
+        `SELECT ${columns} FROM security_events WHERE occurred_at < $1 OR (occurred_at = $1 AND id < $2::uuid) ORDER BY occurred_at DESC, id DESC LIMIT $3`,
+        [before.toISOString(), beforeId, limit]
+      );
+    } else if (before) {
+      result = await pool.query(
+        `SELECT ${columns} FROM security_events WHERE occurred_at < $1 ORDER BY occurred_at DESC, id DESC LIMIT $2`,
+        [before.toISOString(), limit]
+      );
+    } else {
+      result = await pool.query(
+        `SELECT ${columns} FROM security_events ORDER BY occurred_at DESC, id DESC LIMIT $1`,
+        [limit]
+      );
+    }
+    const last = result.rows.at(-1);
+    return res.status(200).json({
+      events: result.rows,
+      count: result.rowCount,
+      limit,
+      nextCursor: result.rowCount === limit && last
+        ? { before: last.occurred_at, beforeId: last.id }
+        : null
+    });
   } catch {
     return res.status(500).json({ error: "Request could not be completed" });
   }
